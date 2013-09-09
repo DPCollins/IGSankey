@@ -138,7 +138,7 @@ draw()
 
 function draw() {
 
-d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, data) 
+d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, data) {
 // d3.csv("http://localhost:8888/Documents/AshUserFlow/AshSankey1.csv", function(error, data) {
 
   data = data.filter(function(d) { return d.value>ui.value})
