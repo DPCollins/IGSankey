@@ -85,7 +85,7 @@ var tooltip = d3.select("body")
 	.style("line-height", "1.85em")
 // 	.text("hello my name is Link");
 
-
+var thou = d3.format(",")
 
 var OS = d3.scale.linear()
 		   .domain([0,1.6e6])
@@ -123,9 +123,9 @@ console.log('hi')
 
 $(function() {
 $("#scale").slider({
-min: 100,
+min: 0,
 max: 7e5, 
-value: 100, //default slider value
+value: 0, //default slider value
 step: 1000, // step is the allow increments the slider can move.
 slide: function(event, ui) {
 
