@@ -64,7 +64,9 @@ div.tooltip1 {
 <script src="http://d3js.org/d3.v3.min.js"></script>
  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
-<script src="http://localhost:8888/Documents/AshUserFlow/sankey.js"></script>
+<!-- <script src="http://localhost:8888/Documents/AshUserFlow/sankey.js"></script> -->
+
+<script src="http://dpcollins.github.io/IGSankey/sankey.js"></script>
 <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/ui-lightness/jquery-ui.css" type="text/css" media="all" />
 <script>
 	
@@ -121,10 +123,10 @@ console.log('hi')
 
 $(function() {
 $("#scale").slider({
-min: 100, // there are 71 months between 1/1/04 and 12/31/09, 0 is all events
+min: 100,
 max: 7e5, 
 value: 100, //default slider value
-step: 1000, // step is the allow increments the slider can move. 1 = one month
+step: 1000, // step is the allow increments the slider can move.
 slide: function(event, ui) {
 
 
