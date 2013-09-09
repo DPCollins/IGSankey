@@ -133,7 +133,7 @@ slide: function(event, ui) {
 console.log(ui.value)
 // function draw() {
 d3.select("#slidertext")
-.text('Volume Filter Value: ' + ui.value);
+.text('Volume Filter Value: ' + thou(ui.value));
 d3.selectAll('.node').remove()
 d3.selectAll('.link').remove()
 draw()
