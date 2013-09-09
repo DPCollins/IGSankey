@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>SANKEY Experiment</title>
+<style>
+
+ui-widget {
+font: 18px Helvetica Neue;
+}
+
+#slidertext {
+	font: 20px Helvetica Neue;
+}
+
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+  stroke-width: 1px;
+  stroke-opacity: 0.4;
+  
+}
+
+.node text {
+  pointer-events: none;
+ /* 
+ font-family: monospace
+  font-size: 10px;
+ */
+  font: 15px sans-serif
+/*   text-shadow: 0 1px 0 #fff; */
+}
+
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+
+div.tooltip1 {
+  color: #333; 
+  background: #fff; 
+  padding: .5em; 
+  text-shadow: #f5f5f5 0 1px 0;
+  border-radius: 2px; 
+  box-shadow: 0px 0px 2px 0px #a6a6a6; 
+  opacity: 0.9; 
+  position: absolute;
+  line-height: 0.85em;
+  
+  }
+
+
+
+</style>
+<body>
+
+<p id="chart">
+
+<!-- <script type="text/javascript" src="d3/d3.v3.js"></script> -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+ <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+ <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+<script src="http://localhost:8888/Documents/AshUserFlow/sankey.js"></script>
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/ui-lightness/jquery-ui.css" type="text/css" media="all" />
+<script>
+	
+var tooltip = d3.select("body")
+	.append("div")
+	.style("position", "absolute")
+// 	.style("z-index", "10")
+	.style("visability", "hidden")
+	.style("color", "#333")
+	.style("padding", ".5em")
+	.style("background", "#fff")
+	.style("text-shadow", "#f5f5f5 0 1px 0")
+	.style("border-radius", "2px")
+	.style("box-shadow", "0px 0px 2px 0px #a6a6a6")
+	.style("opacity", "0")
+	.style("line-height", "1.85em")
+// 	.text("hello my name is Link");
+
+
+
+var OS = d3.scale.linear()
+		   .domain([0,1.6e6])
+		   .range([0.1,0.41])
+
+var units = "Widgets";
+
+var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    width = 1800 - margin.left - margin.right,
+    height = 800 - margin.top - margin.bottom;
+
+var formatNumber = d3.format(",.0f"),    // zero decimal places
+    format = function(d) { return formatNumber(d) + " " + units; },
+    color = d3.scale.category20();
+
+// append the svg canvas to the page
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Set the sankey diagram properties
+var sankey = d3.sankey()
+    .nodeWidth(20)
+    .nodePadding(30)
+    .size([width, height]);
+
+var path = sankey.link();
+
+console.log('hi')
+// load the data (using the timelyportfolio csv method)
+// d3.csv("data/sankey.csv", function(error, data) {
+
+$(function() {
+$("#scale").slider({
+min: 100, // there are 71 months between 1/1/04 and 12/31/09, 0 is all events
+max: 7e5, 
+value: 100, //default slider value
+step: 1000, // step is the allow increments the slider can move. 1 = one month
+slide: function(event, ui) {
+
+
+console.log(ui.value)
+// function draw() {
+d3.select("#slidertext")
+.text('Volume Filter Value: ' + ui.value);
+d3.selectAll('.node').remove()
+d3.selectAll('.link').remove()
+draw()
+
+function draw() {
+
+d3.csv("http://localhost:8888/Documents/AshUserFlow/AshSankey1.csv", function(error, data) {
+
+  data = data.filter(function(d) { return d.value>ui.value})
+  thou = d3.format(",")
+  //set up graph in same style as original example but empty
+  graph = {"nodes" : [], "links" : []};
+
+    data.forEach(function (d) {
+      graph.nodes.push({ "name": d.source });
+      graph.nodes.push({ "name": d.target });
+      graph.links.push({ "source": d.source,
+                         "target": d.target,
+                         "value": +d.value });
+     });
+
+     // return only the distinct / unique nodes
+     graph.nodes = d3.keys(d3.nest()
+       .key(function (d) { return d.name; })
+       .map(graph.nodes));
+
+     // loop through each link replacing the text with its index from node
+     graph.links.forEach(function (d, i) {
+       graph.links[i].source = graph.nodes.indexOf(graph.links[i].source);
+       graph.links[i].target = graph.nodes.indexOf(graph.links[i].target);
+     });
+
+     //now loop through each nodes to make nodes an array of objects
+     // rather than an array of strings
+     graph.nodes.forEach(function (d, i) {
+       graph.nodes[i] = { "name": d };
+     });
+
+  sankey
+    .nodes(graph.nodes)
+    .links(graph.links)
+    .layout(32);
+
+// add in the links
+ 
+ // Link traffic cutoff
+ 
+//  vl = 1e4
+ 
+  var link = svg.append("g").selectAll(".link")
+      .data(graph.links)
+    .enter().append("path")
+      .attr("class", "link")
+      .attr("d", path)
+      .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+      .style("stroke", function(d) {if (d.value >1e7) {return "orange"} 
+      								else if (d.source.name=='Direct') {return "Green"}
+      								else if (d.source.name=='Referring links') {return "red"}
+      								else if (d.source.name=='(Other sources)') {return "purple"}
+      								else if (d.source.name=='Other GOV.UK') {return "blue"}
+      								else if (d.target.name=='BrowseDirect') {return "Green"}
+      								else if (d.target.name=='BouncesDirect') {return "Green"}
+      								else if (d.target.name=='BrowseRef') {return "Red"}
+      								else if (d.target.name=='BouncesRef') {return "Red"}
+      								else if (d.target.name=='BrowseRef') {return "purple"}
+      								else if (d.target.name=='BouncesRef') {return "purple"}
+      								else if (d.target.name=='BrowseGOV') {return "blue"}
+      								else if (d.target.name=='BounceGOV') {return "blue"}
+      								
+      								
+      								 })
+      .style("stroke-opacity", function(d) {if (d.target.name=='BouncesOrganic') {return 0.32} 
+      								else if (d.target.name=='BouncesDirect') {return 0.32}
+      								else if (d.target.name=='BouncesRef') {return 0.32}
+      								else if (d.target.name=='BouncesOther') {return 0.32}
+//       								else if (d.value < 1e3) {return 0}
+      										
+      								else {return OS(d.value)}})
+     
+//       .style("stroke-opacity", function(d) {if (d.value < vl) {return 0}})
+     
+     
+     
+     
+//       .style("stroke-opacity", function(d) {return OS(d.value)})
+
+      .on("mouseover", function(d) {return {x:d3.select(this).style("stroke-opacity", .5), z:tooltip.style("opacity", "0.9"), y:tooltip.html("<b>"+d.source.name+"</b>" +  " &#8594 " + "<b>"+d.target.name+"</b>" + ' = ' + thou(d.value)) }})
+//       .on("mouseover", function(d) {if (d.value > vl) {return {x:d3.select(this).style("stroke-opacity", .5), z:tooltip.style("opacity", "0.9"), y:tooltip.html("<b>"+d.source.name+"</b>" +  " &#8594 " + "<b>"+d.target.name+"</b>" + ' = ' + thou(d.value)) } }})
+
+
+//       .on("mouseout",  function(d) {return d3.select(this).style("stroke-opacity", function(d) {return OS(d.value)})})
+      .on("mouseout",  function(d) {return {x2:d3.select(this).style("stroke-opacity", OS(d.value)), y2:tooltip.style("opacity", "0")}})
+
+//       .on("mouseout",  function(d) {if (d.value > vl) {return {x2:d3.select(this).style("stroke-opacity", OS(d.value)), y2:tooltip.style("opacity", "0")}}})
+
+
+
+//       .on("mouseover", function(d){return tooltip.style("visibility", "visible")})
+//       .on("mouseover", function(d){return tooltip.text(d.value)})
+	  .on("mousemove", function(){return tooltip.style("top",
+    		(d3.event.pageY-50)+"px").style("left",(d3.event.pageX+20)+"px");})
+// 	  .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+      
+      
+      .sort(function(a, b) { return b.dy - a.dy; });
+
+// add the link titles
+//   link.append("title")
+//         .text(function(d) {
+//     		return d.source.name + " → " + 
+//                 d.target.name + "\n" + format(d.value); });
+
+
+
+
+// add in the nodes
+  var node = svg.append("g").selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { 
+		  return "translate(" + d.x + "," + d.y + ")"; })
+    .call(d3.behavior.drag()
+      .origin(function(d) { return d; })
+      .on("dragstart", function() { 
+		  this.parentNode.appendChild(this); })
+      .on("drag", dragmove));
+
+// add the rectangles for the nodes
+  node.append("rect")
+      .attr("height", function(d) { return d.dy; })
+      .attr("width", sankey.nodeWidth())
+      .style("fill", function(d) { 
+		  return d.color = color(d.name.replace(/ .*/, "")); })
+      .style("stroke", function(d) { 
+		  return d3.rgb(d.color).darker(2); })
+    .append("title")
+      .text(function(d) { 
+		  return d.name + "\n" + format(d.value); });
+
+// add in the title for the nodes
+  node.append("text")
+      .attr("x", -6)
+      .attr("y", function(d) { return d.dy / 2; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "end")
+      .attr("transform", null)
+      .text(function(d) { return d.name; })
+    .filter(function(d) { return d.x < width / 2; })
+      .attr("x", 6 + sankey.nodeWidth())
+      .attr("text-anchor", "start");
+
+// the function for moving the nodes
+  function dragmove(d) {
+    d3.select(this).attr("transform", 
+        "translate(" + d.x + "," + (
+                d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))
+            ) + ")");
+    sankey.relayout();
+    link.attr("d", path);
+  }
+
+});
+
+}}
+
+})
+
+
+
+})
+// draw()
+
+</script>
+
+<div id="scale" style="width: 80%px; margin-left:10%; margin-right:10%"></div>
+<p id="slidertext" style="width: 50%; font: 15px; margin-left:auto%; margin-right:auto"</p>
+</body>
+</html>
