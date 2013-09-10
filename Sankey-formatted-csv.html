@@ -10,7 +10,7 @@ bottom: 10%
 
 .ui-button .ui-button-text {
 	padding: 5px 5px 5px 5px !important;
-	font-size: .72em !important;
+	font-size: .65em !important;
 }
 
 .ui-state-default{
@@ -108,9 +108,9 @@ var tooltip = d3.select("body")
 
 var thou = d3.format(",")
 
-var OS = d3.scale.linear()
-		   .domain([0,1.6e6])
-		   .range([0.1,0.41])
+// var OS = d3.scale.linear()
+// 		   .domain([0,1.6e6])
+// 		   .range([0.1,0.41])
 
 var units = "Widgets";
 
@@ -141,6 +141,8 @@ var sankey = d3.sankey()
 
 var path = sankey.link();
 
+G = []
+
 console.log('hi')
 // load the data (using the timelyportfolio csv method)
 // d3.csv("data/sankey.csv", function(error, data) {
@@ -149,12 +151,15 @@ $(function() {
     $("#radio").buttonset();
 });
 
+
+
 $(function() {
 $("#scale").slider({
 min: 0,
 max: 7e5, 
+
 value: 0, //default slider value
-step: 1000, // step is the allow increments the slider can move.
+step: 100, // step is the allow increments the slider can move.
 slide: function(event, ui) {
 
 
@@ -164,13 +169,18 @@ d3.select("#slidertext")
 .text('Volume Filter Value: ' + thou(ui.value));
 d3.selectAll('.node').remove()
 d3.selectAll('.link').remove()
+// window.draw = draw()
 draw()
+G = []
+
+
 
 function draw() {
 
 d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, data) {
 // d3.csv("http://localhost:8888/Documents/AshUserFlow/AshSankey1.csv", function(error, data) {
 
+  
   data = data.filter(function(d) { return d.value>ui.value})
   data = data.filter(function(d) { if ($("#radio :radio:checked + label").text()=='Organic') 
   											{return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')}
@@ -185,12 +195,16 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
   											
   									 else if ($("#radio :radio:checked + label").text()=='Other Sources')
   								   			{return (d.source=='(Other sources)' || d.target=='BrowseOther' || d.target=='BouncesOther')} 		
-  											})   
-									
+  											   
+									else if  ($("#radio :radio:checked + label").text()=='No Filter')
+											{return data}
+											})
 
-
+ 
 //   data = data.filter(function(d) {return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')})
   
+ 
+ 
   thou = d3.format(",")
   //set up graph in same style as original example but empty
   graph = {"nodes" : [], "links" : []};
@@ -201,11 +215,14 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       graph.links.push({ "source": d.source,
                          "target": d.target,
                          "value": +d.value });
+     G.push(parseInt(d.value))
      });
 
      // return only the distinct / unique nodes
     
-    
+    var OS = d3.scale.linear()
+		   .domain([d3.min(G), d3.max(G)])
+		   .range([0.1,0.41])
     
      graph.nodes = d3.keys(d3.nest()
        .key(function (d) { return d.name; })
@@ -251,27 +268,27 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       								else if (d.target.name=='BouncesDirect') {return "Green"}
       								else if (d.target.name=='BrowseRef') {return "Red"}
       								else if (d.target.name=='BouncesRef') {return "Red"}
-      								else if (d.target.name=='BrowseRef') {return "purple"}
-      								else if (d.target.name=='BouncesRef') {return "purple"}
+      								else if (d.target.name=='BrowseOther') {return "purple"}
+      								else if (d.target.name=='BouncesOther') {return "purple"}
       								else if (d.target.name=='BrowseGOV') {return "blue"}
       								else if (d.target.name=='BouncesGOV') {return "blue"}
       								
       								
       								 })
-      .style("stroke-opacity", function(d) {if (d.target.name=='BouncesOrganic') {return 0.32} 
-      								else if (d.target.name=='BouncesDirect') {return 0.32}
-      								else if (d.target.name=='BouncesRef') {return 0.32}
-      								else if (d.target.name=='BouncesOther') {return 0.32}
+   //    .style("stroke-opacity", function(d) {if (d.target.name=='BouncesOrganic') {return 0.32} 
+//       								else if (d.target.name=='BouncesDirect') {return 0.32}
+//       								else if (d.target.name=='BouncesRef') {return 0.32}
+//       								else if (d.target.name=='BouncesOther') {return 0.32}
 //       								else if (d.value < 1e3) {return 0}
       										
-      								else {return OS(d.value)}})
+//       								else {return OS(d.value)}})
      
 //       .style("stroke-opacity", function(d) {if (d.value < vl) {return 0}})
      
      
      
      
-//       .style("stroke-opacity", function(d) {return OS(d.value)})
+      .style("stroke-opacity", function(d) {return OS(d.value)})
 
       .on("mouseover", function(d) {return {x:d3.select(this).style("stroke-opacity", .5), z:tooltip.style("opacity", "0.9"), y:tooltip.html("<b>"+d.source.name+"</b>" +  " &#8594 " + "<b>"+d.target.name+"</b>" + ' = ' + thou(d.value)) }})
 //       .on("mouseover", function(d) {if (d.value > vl) {return {x:d3.select(this).style("stroke-opacity", .5), z:tooltip.style("opacity", "0.9"), y:tooltip.html("<b>"+d.source.name+"</b>" +  " &#8594 " + "<b>"+d.target.name+"</b>" + ' = ' + thou(d.value)) } }})
@@ -349,27 +366,30 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
     link.attr("d", path);
   }
 
+
 });
 
 }}
 
 })
 
-
-
 })
+
 // draw()
+
 
 </script>
 
 <form>
   <div id="radio">
-    <input type="radio" id="radio1" name="radio" /><label for="radio1">Organic</label>
+    <input type="radio" id="radio1" name="radio" onchange=console.log('hello') /><label for="radio1">Organic</label>
 <!--     <input type="radio" id="radio1" name="radio" checked="checked"/><label for="radio1">Organic</label> -->
     <input type="radio" id="radio2" name="radio"  /><label for="radio2">Referring Links</label>
     <input type="radio" id="radio3" name="radio" /><label for="radio3">Direct</label>
     <input type="radio" id="radio4" name="radio" /><label for="radio4">Other GOV.UK</label>
     <input type="radio" id="radio5" name="radio" /><label for="radio5">Other Sources</label>
+    <input type="radio" id="radio6" name="radio" checked="checked" /><label for="radio6">No Filter</label>
+    
   </div>
 </form>
 
