@@ -4,11 +4,31 @@
 <style>
 
 ui-widget {
-font: 18px Helvetica Neue;
+font: 15px Helvetica Neue;
+bottom: 10%
 }
 
+.ui-button .ui-button-text {
+	padding: 5px 5px 5px 5px !important;
+	font-size: .72em !important;
+}
+
+.ui-state-default{
+	font-weight: normal;
+	}
+
+#radio {
+	position: absolute;
+	font: 15px;
+	top:2%;
+}
+
+
 #slidertext {
-	font: 20px Helvetica Neue;
+/* 	font: 18px Helvetica Neue; */
+	font: 15px monospace;
+	position: absolute;
+	bottom:2%;
 }
 
 .node rect {
@@ -65,6 +85,7 @@ div.tooltip1 {
  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
 <!-- <script src="http://localhost:8888/Documents/AshUserFlow/sankey.js"></script> -->
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 
 <script src="http://dpcollins.github.io/IGSankey/sankey.js"></script>
 <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/ui-lightness/jquery-ui.css" type="text/css" media="all" />
@@ -93,9 +114,12 @@ var OS = d3.scale.linear()
 
 var units = "Widgets";
 
-var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 1800 - margin.left - margin.right,
-    height = 800 - margin.top - margin.bottom;
+W2 = screen.availWidth
+H2 = 0.8*screen.availHeight
+
+var margin = {top: 10, right: 50, bottom: 50, left: 50},
+    width = W2-10 - margin.left - margin.right,
+    height = H2 - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),    // zero decimal places
     format = function(d) { return formatNumber(d) + " " + units; },
@@ -122,6 +146,10 @@ console.log('hi')
 // d3.csv("data/sankey.csv", function(error, data) {
 
 $(function() {
+    $("#radio").buttonset();
+});
+
+$(function() {
 $("#scale").slider({
 min: 0,
 max: 7e5, 
@@ -144,6 +172,25 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
 // d3.csv("http://localhost:8888/Documents/AshUserFlow/AshSankey1.csv", function(error, data) {
 
   data = data.filter(function(d) { return d.value>ui.value})
+  data = data.filter(function(d) { if ($("#radio :radio:checked + label").text()=='Organic') 
+  											{return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')}
+  								   else if ($("#radio :radio:checked + label").text()=='Referring Links')
+  								   			{return (d.source=='Referring links' || d.target=='BrowseRef' || d.target=='BouncesRef')} 			
+  											
+  								   else if ($("#radio :radio:checked + label").text()=='Direct')
+  								   			{return (d.source=='Direct' || d.target=='BrowseDirect' || d.target=='BouncesDirect')} 
+  								   	
+  								    else if ($("#radio :radio:checked + label").text()=='Other GOV.UK')
+  								   			{return (d.source=='Other GOV.UK' || d.target=='BrowseGOV' || d.target=='BouncesGOV')} 			
+  											
+  									 else if ($("#radio :radio:checked + label").text()=='Other Sources')
+  								   			{return (d.source=='(Other sources)' || d.target=='BrowseOther' || d.target=='BouncesOther')} 		
+  											})   
+									
+
+
+//   data = data.filter(function(d) {return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')})
+  
   thou = d3.format(",")
   //set up graph in same style as original example but empty
   graph = {"nodes" : [], "links" : []};
@@ -157,6 +204,9 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
      });
 
      // return only the distinct / unique nodes
+    
+    
+    
      graph.nodes = d3.keys(d3.nest()
        .key(function (d) { return d.name; })
        .map(graph.nodes));
@@ -184,6 +234,8 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
  
 //  vl = 1e4
  
+  data.forEach(function(d) {console.log(d.source)})
+  
   var link = svg.append("g").selectAll(".link")
       .data(graph.links)
     .enter().append("path")
@@ -202,7 +254,7 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       								else if (d.target.name=='BrowseRef') {return "purple"}
       								else if (d.target.name=='BouncesRef') {return "purple"}
       								else if (d.target.name=='BrowseGOV') {return "blue"}
-      								else if (d.target.name=='BounceGOV') {return "blue"}
+      								else if (d.target.name=='BouncesGOV') {return "blue"}
       								
       								
       								 })
@@ -310,7 +362,19 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
 
 </script>
 
-<div id="scale" style="width: 80%px; margin-left:10%; margin-right:10%"></div>
-<p id="slidertext" style="width: 50%; font: 15px; margin-left:auto%; margin-right:auto"</p>
+<form>
+  <div id="radio">
+    <input type="radio" id="radio1" name="radio" /><label for="radio1">Organic</label>
+<!--     <input type="radio" id="radio1" name="radio" checked="checked"/><label for="radio1">Organic</label> -->
+    <input type="radio" id="radio2" name="radio"  /><label for="radio2">Referring Links</label>
+    <input type="radio" id="radio3" name="radio" /><label for="radio3">Direct</label>
+    <input type="radio" id="radio4" name="radio" /><label for="radio4">Other GOV.UK</label>
+    <input type="radio" id="radio5" name="radio" /><label for="radio5">Other Sources</label>
+  </div>
+</form>
+
+
+<div id="scale" style="width: 80%px; margin-left:10%; margin-right:10%; bottom:40px "></div>
+<p id="slidertext" style="width: 50%; font: 13px; margin-left:auto%; margin-right:auto; bottom 30px"</p>
 </body>
 </html>
