@@ -46,6 +46,7 @@ bottom: 10%
  font-family: monospace
   font-size: 10px;
  */
+  background-color: white;
   font: 15px sans-serif
 /*   text-shadow: 0 1px 0 #fff; */
 }
@@ -184,7 +185,7 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
   
   data = data.filter(function(d) { return d.value>ui.value})
   data = data.filter(function(d) { if ($("#radio :radio:checked + label").text()=='Organic') 
-  											{return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')}
+  											{return (d.source=='Search engines (natural)' || d.target=='BrowseSE' || d.target=='BouncesSE')}
   								   else if ($("#radio :radio:checked + label").text()=='Referring Links')
   								   			{return (d.source=='Referring links' || d.target=='BrowseRef' || d.target=='BouncesRef')} 			
   											
@@ -202,7 +203,7 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
 											})
 
  
-//   data = data.filter(function(d) {return (d.source=='Search engines (natural)' || d.target=='BrowseOrganic' || d.target=='BouncesOrganic')})
+//   data = data.filter(function(d) {return (d.source=='Search engines (natural)' || d.target=='BrowseSE' || d.target=='BouncesSE')})
   
  
   REFS = []
@@ -223,7 +224,8 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
     
     var OS = d3.scale.linear()
 		   .domain([d3.min(G), d3.max(G)])
-		   .range([0.1,0.41])
+// 		   .range([0.1,0.41])
+		   .range([0.1,0.75])
     
      graph.nodes = d3.keys(d3.nest()
        .key(function (d) { return d.name; })
@@ -265,6 +267,9 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       								else if (d.source.name=='Referring links') {return "red"}
       								else if (d.source.name=='(Other sources)') {return "purple"}
       								else if (d.source.name=='Other GOV.UK') {return "blue"}
+      								else if (d.source.name=='Search engines (natural)') {return "#002142"}
+      								else if (d.target.name=='BrowseSE') {return "#002142"}
+      								else if (d.target.name=='BouncesSE') {return "#002142"}
       								else if (d.target.name=='BrowseDirect') {return "Green"}
       								else if (d.target.name=='BouncesDirect') {return "Green"}
       								else if (d.target.name=='BrowseRef') {return "Red"}
@@ -276,7 +281,7 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       								
       								
       								 })
-   //    .style("stroke-opacity", function(d) {if (d.target.name=='BouncesOrganic') {return 0.32} 
+   //    .style("stroke-opacity", function(d) {if (d.target.name=='BouncesSE') {return 0.32} 
 //       								else if (d.target.name=='BouncesDirect') {return 0.32}
 //       								else if (d.target.name=='BouncesRef') {return 0.32}
 //       								else if (d.target.name=='BouncesOther') {return 0.32}
@@ -339,10 +344,26 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       .attr("width", sankey.nodeWidth())
       .style("fill", function(d,i) { console.log(i); console.log(graph.nodes[i].name);
 // 		  return d.color = color(d.name.replace(/ .*/, "")); })
-      	 if (i<19)
+      	 if (graph.nodes[i].name == 'Referring links' )
+      	 	{return "#7A0000"}
+	    else if (graph.nodes[i].name == 'Search engines (natural)')
+      	 	{return "#002142"} 
+	    else if (graph.nodes[i].name == 'Direct')
+      	 	{return "Green"} 
+      	else if (graph.nodes[i].name == 'Other GOV.UK')
+      		{return 'blue'}
+      	 
+      	else if (graph.nodes[i].name == '(Other sources)')
+      	 	{return "purple"}
+      	else if (graph.nodes[i].name == 'BrowseSE' || graph.nodes[i].name == 'BrowseDirect' || graph.nodes[i].name == 'BrowseGOV' || graph.nodes[i].name == 'BrowseOther' || graph.nodes[i].name == 'BrowseRef')
+      	 	{return "#FFA366"}
+      	else if (graph.nodes[i].name == 'BouncesSE' || graph.nodes[i].name == 'BouncesDirect' || graph.nodes[i].name == 'BouncesGOV' || graph.nodes[i].name == 'BouncesOther' || graph.nodes[i].name == 'BouncesDirect' || graph.nodes[i].name == 'BouncesRef' )
+      	 	{return "#FF0000"}
+      	
+      	else 
       	 	 {return "#57da95"}	 
       	
-      	 else {return d.color = color(d.name.replace(/ .*/, ""))}
+//       	 else {return d.color = color(d.name.replace(/ .*/, ""))}
       	 
       	 })
       	
@@ -364,9 +385,12 @@ d3.csv("http://dpcollins.github.io/IGSankey/AshSankey1.csv", function(error, dat
       .text(function(d) { return d.name; })
     .filter(function(d) { return d.x < width / 2; })
       .attr("x", 6 + sankey.nodeWidth())
-      .attr("text-anchor", "start");
+      .attr("text-anchor", "start")
+      
+      
 
-d3.select('rect').style("fill","red")
+// d3.select('rect').style("fill","red")
+
 
 // the function for moving the nodes
   function dragmove(d) {
